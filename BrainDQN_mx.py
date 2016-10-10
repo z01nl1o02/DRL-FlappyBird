@@ -106,16 +106,16 @@ class BrainDQN:
              
     def copyTargetQNetwork(self):
         arg_params,aux_params=self.Qnet.get_params()
-        arg={}
-        for k,v in arg_params.iteritems():
-            arg[k]=arg_params[k].asnumpy()
+        #arg={}
+        #for k,v in arg_params.iteritems():
+        #    arg[k]=arg_params[k].asnumpy()
 
         self.target.init_params(initializer=None, arg_params=arg_params,aux_params=aux_params,force_init=True)
 
-        args,auxs=self.target.get_params()
-        arg1={}
-        for k,v in args.iteritems():
-            arg1[k]=args[k].asnumpy()
+        #args,auxs=self.target.get_params()
+        #arg1={}
+        #for k,v in args.iteritems():
+        #    arg1[k]=args[k].asnumpy()
         print 'time to copy'
 
     def trainQNetwork(self):
