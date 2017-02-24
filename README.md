@@ -27,5 +27,5 @@ the game interface just need to be able to feed the action to the game and outpu
 
 
 ## Disclaimer
-This work is based on the repo: [yenchenlin1994/DeepLearningFlappyBird](https://github.com/yenchenlin1994/DeepLearningFlappyBird.git)
+This work is based on the repo: [yenchenlin1994/DeepLearningFlappyBird](https://github.com/yenchenlin1994/DeepLearningFlappyBird.git) and [songrotek/DRL-FlappyBird](https://github.com/songrotek/DRL-FlappyBird.git)
 
