@@ -12,6 +12,7 @@ import mxnet.gluon.nn as nn
 import random
 from collections import deque 
 import mxnet.autograd as autograd
+from time import time
 
 # Hyper Parameters:
 FRAME_PER_ACTION = 1
@@ -99,6 +100,8 @@ class BrainDQN:
         self.epsilon = INITIAL_EPSILON
         self.actions = actions
 
+        self.trainCost = []
+
         self.target = QNET(actions,ctx)
 
         self.Qnet = QNET(actions,ctx)
@@ -141,13 +144,16 @@ class BrainDQN:
             y_batch[terminal==False]+= (GAMMA * np.max(Qvalue_batch,axis=1))[terminal==False]
 
         #print state_batch.shape, action_batch.shape,  y_batch.shape
+        t0 = time()
         self.Qnet.fit([mx.nd.array(state_batch,ctx),mx.nd.array(action_batch,ctx)],[mx.nd.array(y_batch,ctx)])
+        self.trainCost.append(time() - t0)
         #self.Qnet.forward(mx.io.DataBatch([mx.nd.array(state_batch,ctx),mx.nd.array(action_batch,ctx)],[mx.nd.array(y_batch,ctx)]),is_train=True)
         #self.Qnet.backward()
         #self.Qnet.update()
 
         # save network every 1000 iteration
         if self.timeStep % 100 == 0:
+            print "train cost {:.4}s".format( np.asarray(self.trainCost).mean() )
             self.Qnet.save_params('saved_networks/network-dqn_gluon%04d.params'%(self.timeStep))
 
         if self.timeStep % UPDATE_TIME == 0:
@@ -167,6 +173,7 @@ class BrainDQN:
             self.replayMemory.popleft()
         if self.timeStep > OBSERVE:
             # Train the network
+
             self.trainQNetwork()
 
         # print info
