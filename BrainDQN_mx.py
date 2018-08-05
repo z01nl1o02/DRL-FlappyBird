@@ -19,7 +19,7 @@ INITIAL_EPSILON = 0#0.01 # starting value of epsilon
 REPLAY_MEMORY = 50000 # number of previous transitions to remember
 BATCH_SIZE = 32 # size of minibatch
 UPDATE_TIME = 100
-ctx=mx.cpu()
+ctx=mx.gpu()
 
 def dataPrep(data):
     if data.shape[2]>1:

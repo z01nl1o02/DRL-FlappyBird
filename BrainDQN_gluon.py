@@ -26,11 +26,11 @@ UPDATE_TIME = 100
 ctx=mx.gpu()
 
 
-class QNET(gluon.HybridBlock):
+class QNET(gluon.Block):
     def __init__(self,classNum,ctx,verbose=False, **kwargs):
         super(QNET,self).__init__(**kwargs)
         with self.name_scope():
-            self.layers = nn.HybridSequential()
+            self.layers = nn.Sequential()
             self.layers.add( nn.Conv2D(channels=32,kernel_size=8,strides=4,padding=2,activation='relu') )
             self.layers.add( nn.MaxPool2D(pool_size=(2,2),strides=(2,2) ) )
             self.layers.add( nn.Conv2D(channels=64,kernel_size=4,strides=2,padding=1,activation='relu'))
@@ -40,12 +40,13 @@ class QNET(gluon.HybridBlock):
             self.layers.add( nn.Dense(classNum))
         self.ctx = ctx
         self.initialize(ctx=ctx)
-        self.trainer = gluon.Trainer(self.collect_params(),"adam",{"wd":0,"beta1":0.5})
+        #self.hybridize()
+        self.trainer = gluon.Trainer(self.collect_params(),"adam",{"learning_rate":0.0002,"wd":0,"beta1":0.5})
         self.loss_l2 = gluon.loss.L2Loss()
         self.output = None
         return
 
-    def hybrid_forward(self,F,X):
+    def forward(self,X):
         out = X
         for layer in self.layers:
             out = layer(out)
@@ -65,7 +66,10 @@ class QNET(gluon.HybridBlock):
         Y = Y_[0].as_in_context(self.ctx)
         with autograd.record():
             Y1 = self.forward(data)
+            #print Y1.asnumpy().shape, action.asnumpy().shape
+            #print (action * Y1)
             Y1 = (action * Y1).sum(axis=1) #action: (0,1) or (1,0), Y1: reward
+            #print Y1.asnumpy().shape
             loss = self.loss_l2(Y1,Y)
         loss.backward()
         self.trainer.step(data.shape[0])
@@ -100,6 +104,11 @@ class BrainDQN:
         self.Qnet = QNET(actions,ctx)
         if param_file!=None:
             self.Qnet.load_params(param_file)
+            self.target.load_params(param_file)
+            #self.Qnet.hybridize()
+            #self.target.hybridize()
+            print 'load pretrained model from {}'.format(param_file)
+            #self.Qnet.hybridize()
         #self.copyTargetQNetwork() 
         # saving and loading networks
             
@@ -139,7 +148,7 @@ class BrainDQN:
 
         # save network every 1000 iteration
         if self.timeStep % 100 == 0:
-            self.Qnet.save_params('saved_networks/network-dqn_mx%04d.params'%(self.timeStep))
+            self.Qnet.save_params('saved_networks/network-dqn_gluon%04d.params'%(self.timeStep))
 
         if self.timeStep % UPDATE_TIME == 0:
             self.copyTargetQNetwork()
@@ -169,8 +178,9 @@ class BrainDQN:
         else:
             state = "train"
 
-        print "TIMESTEP", self.timeStep, "/ STATE", state, \
-        "/ EPSILON", self.epsilon
+        if self.timeStep % 500 == 0:
+            print "TIMESTEP", self.timeStep, "/ STATE", state, \
+            "/ EPSILON", self.epsilon
 
         self.currentState = newState
         self.timeStep += 1
@@ -180,6 +190,7 @@ class BrainDQN:
         self.target.predict( mx.nd.array(self.currentState,ctx)  )
 
         QValue=np.squeeze(self.target.get_outputs()[0].asnumpy())
+        #print 'current QValue {}'.format(QValue)
         action = np.zeros(self.actions)
         action_index = 0
         if self.timeStep % FRAME_PER_ACTION == 0:

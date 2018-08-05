@@ -8,7 +8,8 @@ import cv2
 import sys
 sys.path.append("game/")
 import wrapped_flappy_bird as game
-from BrainDQN_mx import BrainDQN
+from BrainDQN_gluon import BrainDQN
+#from BrainDQN_mx import BrainDQN
 import numpy as np
 
 # preprocess raw image to 80*80 gray image
@@ -16,8 +17,10 @@ def preprocess(observation):
 	observation = cv2.cvtColor(cv2.resize(observation, (80, 80)), cv2.COLOR_BGR2GRAY)
 	ret, observation = cv2.threshold(observation,1,255,cv2.THRESH_BINARY)
 	return np.reshape(observation,(80,80,1))
-
+import os
 def playFlappyBird():
+	if not os.path.exists('saved_networks'):
+		os.makedirs('saved_networks')
 	# Step 1: init BrainDQN
 	actions = 2
 	brain = BrainDQN(actions)
