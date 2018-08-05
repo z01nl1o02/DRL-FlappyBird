@@ -18,12 +18,16 @@ def preprocess(observation):
 	ret, observation = cv2.threshold(observation,1,255,cv2.THRESH_BINARY)
 	return np.reshape(observation,(80,80,1))
 import os
-def playFlappyBird():
+def playFlappyBird(pretrained):
 	if not os.path.exists('saved_networks'):
 		os.makedirs('saved_networks')
 	# Step 1: init BrainDQN
 	actions = 2
-	brain = BrainDQN(actions)
+	#brain = BrainDQN(actions,param_file='saved_networks/network-dqn_gluon34900.params')
+	if pretrained != "":
+		brain = BrainDQN(actions,param_file=pretrained)
+	else:
+		brain = BrainDQN(actions)
 	# Step 2: init Flappy Bird Game
 	flappyBird = game.GameState()
 	# Step 3: play game
@@ -41,8 +45,11 @@ def playFlappyBird():
 		nextObservation = preprocess(nextObservation)
 		brain.setPerception(nextObservation,action,reward,terminal)
 
-def main():
-	playFlappyBird()
+def main(pretrained):
+	playFlappyBird(pretrained)
 
 if __name__ == '__main__':
-	main()
+	if len(sys.argv) == 1:
+		main("")
+	else:
+		main(sys.argv[1])

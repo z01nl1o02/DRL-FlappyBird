@@ -27,11 +27,11 @@ UPDATE_TIME = 100
 ctx=mx.gpu()
 
 
-class QNET(gluon.Block):
+class QNET(gluon.HybridBlock):
     def __init__(self,classNum,ctx,verbose=False, **kwargs):
         super(QNET,self).__init__(**kwargs)
         with self.name_scope():
-            self.layers = nn.Sequential()
+            self.layers = nn.HybridSequential()
             self.layers.add( nn.Conv2D(channels=32,kernel_size=8,strides=4,padding=2,activation='relu') )
             self.layers.add( nn.MaxPool2D(pool_size=(2,2),strides=(2,2) ) )
             self.layers.add( nn.Conv2D(channels=64,kernel_size=4,strides=2,padding=1,activation='relu'))
@@ -41,13 +41,13 @@ class QNET(gluon.Block):
             self.layers.add( nn.Dense(classNum))
         self.ctx = ctx
         self.initialize(ctx=ctx)
-        #self.hybridize()
+        self.hybridize()
         self.trainer = gluon.Trainer(self.collect_params(),"adam",{"learning_rate":0.0002,"wd":0,"beta1":0.5})
         self.loss_l2 = gluon.loss.L2Loss()
         self.output = None
         return
 
-    def forward(self,X):
+    def hybrid_forward(self,F,X):
         out = X
         for layer in self.layers:
             out = layer(out)

@@ -8,5 +8,14 @@
 
 re-implemented with gluon
 
-# tips
-smart bird comes after about 2w step
+#usage
+* train from starting   
+   python FlappyBirdQDN.py 
+* train with one checkpoint (with 3w+ timestep)
+   python FlappyBirdQDN.py traind.params 
+
+
+# results
+* smart bird comes after about 2w steps
+* Block converages quickly than HybridBlock? bird (HybridBlock) show smart after 3w steps
+
